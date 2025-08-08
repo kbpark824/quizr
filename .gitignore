@@ -47,3 +47,6 @@ trivia_data.json
 
 # Gemini CLI temporary files
 .gemini-clipboard/
+
+# VS Code settings
+.vscode/
