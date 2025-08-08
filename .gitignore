@@ -37,3 +37,13 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Project-specific files to ignore
+PRD.md
+tasks.md
+guidelines.md
+supabaseClient.js
+trivia_data.json
+
+# Gemini CLI temporary files
+.gemini-clipboard/
