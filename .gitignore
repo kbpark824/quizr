@@ -50,3 +50,21 @@ trivia_data.json
 
 # VS Code settings
 .vscode/
+
+# Logs
+*.log
+logs/
+
+# Build directories
+build/
+
+# Editor directories
+.idea/
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+tmp/
+temp/
