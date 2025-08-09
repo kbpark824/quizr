@@ -1,40 +1,60 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
 import 'react-native-reanimated';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { supabase } from '../supabaseClient';
+import { registerForPushNotificationsAsync } from '../utils/notifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: false, // Changed to false for less intrusive foreground notifications
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-  const [dailyQuestion, setDailyQuestion] = useState(null);
+
+  const notificationListener = useRef();
+  const responseListener = useRef();
 
   useEffect(() => {
-    const fetchDailyQuestion = async () => {
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('question_date', today)
-        .single();
+    console.log('Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+    console.log('Supabase Anon Key:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
 
-      if (error) {
-        console.error('Error fetching daily question:', error);
-      } else if (data) {
-        setDailyQuestion(data);
-        console.log('Daily Question:', data);
-      } else {
-        console.log('No question found for today.');
+    registerForPushNotificationsAsync().then(token => {
+      if (token) {
+        console.log('Expo Push Token:', token);
+        // Here you would typically send the token to your backend (Supabase) to store it
+        // for sending targeted push notifications.
+        // For now, we'll just log it.
       }
-    };
+    });
 
-    fetchDailyQuestion();
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+    });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response received:', response);
+      // Navigate to the question screen when notification is tapped
+      router.push('/question');
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
   }, []);
 
   if (!loaded) {
