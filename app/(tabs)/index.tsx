@@ -4,8 +4,18 @@ import LoadingState from '../../components/LoadingState';
 import ErrorState from '../../components/ErrorState';
 import QuestionGame from '../../components/QuestionGame';
 import { logger } from '@/utils/logger';
+import { SectionErrorBoundary } from '@/components/ErrorBoundary';
+import { AsyncErrorBoundary } from '@/components/AsyncErrorBoundary';
 
 export default function QuestionScreen() {
+  return (
+    <AsyncErrorBoundary resetKeys={[]} onError={(error) => logger.error('Question screen async error:', error)}>
+      <QuestionScreenContent />
+    </AsyncErrorBoundary>
+  );
+}
+
+function QuestionScreenContent() {
   const { question, loading, error, errorObject, refetch } = useTriviaQuestion();
 
   if (loading) {
@@ -21,5 +31,9 @@ export default function QuestionScreen() {
   }
 
   logger.debug('Rendering QuestionGame');
-  return <QuestionGame question={question} />;
+  return (
+    <SectionErrorBoundary sectionName="Question Game">
+      <QuestionGame question={question} />
+    </SectionErrorBoundary>
+  );
 }

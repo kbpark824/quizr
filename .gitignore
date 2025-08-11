@@ -33,6 +33,8 @@ yarn-error.*
 # local env files
 .env*.local
 .env
+# Keep .env.example as it's a template for other developers
+!.env.example
 
 # typescript
 *.tsbuildinfo
@@ -58,6 +60,19 @@ trivia_data.json
 *.log
 logs/
 
+# React Native / Expo specific
+*.hprof
+*.jsbundle
+*.ttf.orig
+
+# Development tools
+.history/
+.vscode/settings.json
+.vscode/launch.json
+
+# Performance monitoring
+perf.data*
+
 # Build directories
 build/
 
@@ -72,3 +87,13 @@ Desktop.ini
 tmp/
 temp/
 supabase/.temp/
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3

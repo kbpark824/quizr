@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { logger } from '@/utils/logger';
 import { trackRender, trackMemoization, measurePerformance } from '@/utils/performance';
+import { useAsyncErrorHandler } from '@/components/AsyncErrorBoundary';
 
 interface QuestionData {
   question_text: string;
@@ -50,6 +51,7 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorObject, setErrorObject] = useState<any | null>(null);
+  const handleAsyncError = useAsyncErrorHandler();
 
   const fetchQuestion = useCallback(async () => {
     setLoading(true);
@@ -80,6 +82,12 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
       }
     } catch (err) {
       logger.error('Unexpected error fetching question:', err);
+      
+      // Report to async error boundary for global error handling
+      if (err instanceof Error) {
+        handleAsyncError(err);
+      }
+      
       setError('An unexpected error occurred. Please try again.');
       setErrorObject(err);
       setRawQuestionData(null);

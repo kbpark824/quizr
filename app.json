@@ -8,7 +8,7 @@
     "scheme": "quizr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "projectId": "YOUR_PROJECT_ID_HERE",
+    "projectId": "${EXPO_PUBLIC_EAS_PROJECT_ID}",
     "ios": {
       "bundleIdentifier": "app.quizr",
       "supportsTablet": true
@@ -46,7 +46,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "21e4cbd4-d3f3-4b3c-ac90-2b141601e379"
+        "projectId": "${EXPO_PUBLIC_EAS_PROJECT_ID}"
       }
     },
     "owner": "kbpark824"

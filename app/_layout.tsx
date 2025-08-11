@@ -7,9 +7,10 @@ import React, { useEffect, useRef } from 'react';
 import { supabase } from '@/supabaseClient';
 
 // Removed unused useColorScheme import
-import { registerForPushNotificationsAsync } from '../utils/notifications';
+import { registerForPushNotificationsAsync, NotificationError } from '../utils/notifications';
 import { ThemeProvider } from '@/providers/ThemeProvider'; // Our custom ThemeProvider
 import { logger } from '@/utils/logger';
+import { AppErrorBoundary } from '@/components/ErrorBoundary';
 
 // Import performance debugger in development
 if (__DEV__) {
@@ -65,8 +66,12 @@ export default function RootLayout() {
   const responseListener = useRef<any>(null);
 
   useEffect(() => {
-    logger.debug('Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
-    logger.debug('Supabase Anon Key:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? '********' : 'Not Set');
+    // Log configuration status without exposing sensitive values
+    logger.debug('Environment configuration check:', {
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing',
+      easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ? 'Set' : 'Missing'
+    });
 
     logger.debug('Attempting to register for push notifications...');
     registerForPushNotificationsAsync().then(token => {
@@ -77,7 +82,15 @@ export default function RootLayout() {
         logger.warn('No Expo Push Token obtained.');
       }
     }).catch(error => {
-      logger.error('Error during push notification registration:', error);
+      if (error instanceof NotificationError) {
+        // Log the specific error type and user-friendly message
+        logger.error(`Push notification registration failed [${error.code}]:`, error.message);
+        if (error.userMessage) {
+          logger.warn('User message:', error.userMessage);
+        }
+      } else {
+        logger.error('Unexpected error during push notification registration:', error);
+      }
     });
 
     // This listener is fired whenever a notification is received while the app is foregrounded
@@ -108,12 +121,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider> {/* Use our custom ThemeProvider */}
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AppErrorBoundary>
+      <ThemeProvider> {/* Use our custom ThemeProvider */}
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </AppErrorBoundary>
   );
 }
