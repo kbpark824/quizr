@@ -2,7 +2,7 @@
   "expo": {
     "name": "Quizr",
     "slug": "quizr",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "quizr",
@@ -35,10 +35,36 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "position": "sticky",
+          "visibility": "visible",
+          "behavior": "inset-touch",
+          "backgroundColor": "#000000"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "${EXPO_PUBLIC_EAS_PROJECT_ID}"
+      }
+    },
+    "owner": "kbpark824"
   }
 }
