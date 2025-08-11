@@ -47,10 +47,10 @@ export default function AboutScreen() {
           variant="tertiary"
           size="medium"
           fullWidth
-          onPress={() => handlePressLink('https://www.quizr.app/terms')}
+          onPress={() => handlePressLink('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
           accessible={true}
           accessibilityLabel="Terms of Use link"
-          accessibilityHint="Opens the Quizr terms of use in your browser"
+          accessibilityHint="Opens the Apple Terms of Use in your browser"
           accessibilityRole="link"
         />
 

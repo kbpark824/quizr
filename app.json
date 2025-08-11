@@ -8,7 +8,6 @@
     "scheme": "quizr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "projectId": "${EXPO_PUBLIC_EAS_PROJECT_ID}",
     "ios": {
       "bundleIdentifier": "app.quizr",
       "supportsTablet": true
@@ -19,9 +18,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "navigationBarColor": "#000000",
-      "navigationBarStyle": "light-content"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +34,25 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "position": "sticky",
+          "visibility": "visible",
+          "behavior": "inset-touch",
+          "backgroundColor": "#000000"
         }
       ]
     ],

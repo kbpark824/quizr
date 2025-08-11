@@ -18,6 +18,7 @@
     "@supabase/supabase-js": "^2.54.0",
     "expo": "~53.0.20",
     "expo-blur": "~14.1.5",
+    "expo-build-properties": "~0.14.8",
     "expo-constants": "~17.1.7",
     "expo-font": "~13.3.2",
     "expo-haptics": "~14.1.4",
@@ -35,7 +36,6 @@
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
     "react-native-gesture-handler": "~2.24.0",
-    "react-native-navigation-bar-color": "^2.0.2",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
@@ -50,5 +50,11 @@
     "eslint-config-expo": "~9.2.0",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "author": "Kibum Park",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kbpark824/quizr"
+  }
 }
