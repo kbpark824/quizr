@@ -7,12 +7,7 @@ Deno.serve(async (req) => {
   )
 
   // Fetch daily question
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const { data: question, error: questionError } = await supabase
-    .from('questions')
-    .select('*')
-    .eq('question_date', today)
-    .single()
+  const { data: question, error: questionError } = await supabase.functions.invoke('get-trivia-question');
 
   if (questionError) {
     console.error('Error fetching daily question:', questionError)
@@ -43,8 +38,7 @@ Deno.serve(async (req) => {
     to: record.token,
     sound: 'default',
     title: 'Quizr Daily Trivia!',
-    body: question.question_text,
-    data: { questionId: question.id, date: question.question_date },
+    body: question.question,
   }))
 
   // Send notifications using Expo Push API

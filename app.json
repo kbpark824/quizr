@@ -8,6 +8,7 @@
     "scheme": "quizr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "projectId": "YOUR_PROJECT_ID_HERE",
     "ios": {
       "bundleIdentifier": "app.quizr",
       "supportsTablet": true
@@ -18,7 +19,9 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "navigationBarColor": "#000000",
+      "navigationBarStyle": "light-content"
     },
     "web": {
       "bundler": "metro",
@@ -39,6 +42,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "21e4cbd4-d3f3-4b3c-ac90-2b141601e379"
+      }
+    },
+    "owner": "kbpark824"
   }
 }

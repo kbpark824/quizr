@@ -43,7 +43,9 @@ app-example
 PRD.md
 tasks.md
 guidelines.md
-supabaseClient.js
+error.md
+CLAUDE.md
+
 trivia_data.json
 
 # Gemini CLI temporary files
@@ -69,3 +71,4 @@ Desktop.ini
 # Temporary files
 tmp/
 temp/
+supabase/.temp/

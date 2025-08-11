@@ -28,7 +28,9 @@ export async function registerForPushNotificationsAsync() {
     return;
   }
 
-  token = (await Notifications.getExpoPushTokenAsync()).data;
+  token = (await Notifications.getExpoPushTokenAsync({ 
+    projectId: process.env.EXPO_PUBLIC_PROJECT_ID 
+  })).data;
 
   return token;
 }
