@@ -22,6 +22,8 @@ import { supabase } from '../supabaseClient';
 import { logger } from '@/utils/logger';
 import { trackRender, trackMemoization, measurePerformance } from '@/utils/performance';
 import { useAsyncErrorHandler } from '@/components/AsyncErrorBoundary';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDeviceId } from '@/utils/deviceId';
 
 interface QuestionData {
   question_text: string;
@@ -29,12 +31,20 @@ interface QuestionData {
   correct_answer: string;
 }
 
+interface UserStatus {
+  has_attempted: boolean;
+  is_completed: boolean;
+  can_attempt: boolean;
+}
+
 interface UseTriviaQuestionReturn {
   question: QuestionData | null;
+  userStatus: UserStatus | null;
   loading: boolean;
   error: string | null;
-  errorObject: any | null; // Add error object for better context
+  errorObject: any | null;
   refetch: () => Promise<void>;
+  markCompleted: () => Promise<void>;
 }
 
 // Helper function to decode HTML entities
@@ -65,12 +75,52 @@ const shuffleArray = <T>(array: T[]): T[] => {
   return shuffled;
 };
 
+const DAILY_QUESTION_CACHE_KEY = 'quizr_daily_question_cache';
+
 export function useTriviaQuestion(): UseTriviaQuestionReturn {
   const [rawQuestionData, setRawQuestionData] = useState<any | null>(null);
+  const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorObject, setErrorObject] = useState<any | null>(null);
   const handleAsyncError = useAsyncErrorHandler();
+
+  // Helper to get today's date string
+  const getTodaysDate = (): string => {
+    return new Date().toISOString().split('T')[0];
+  };
+
+  // Helper to load from local cache
+  const loadFromCache = async (): Promise<{ question: any; userStatus: UserStatus } | null> => {
+    try {
+      const cached = await AsyncStorage.getItem(DAILY_QUESTION_CACHE_KEY);
+      if (cached) {
+        const parsedCache = JSON.parse(cached);
+        if (parsedCache.date === getTodaysDate()) {
+          logger.debug('Loaded question from cache');
+          return parsedCache;
+        }
+      }
+    } catch (error) {
+      logger.warn('Failed to load from cache:', error);
+    }
+    return null;
+  };
+
+  // Helper to save to local cache
+  const saveToCache = async (questionData: any, userStatus: UserStatus) => {
+    try {
+      const cacheData = {
+        date: getTodaysDate(),
+        question: questionData,
+        userStatus
+      };
+      await AsyncStorage.setItem(DAILY_QUESTION_CACHE_KEY, JSON.stringify(cacheData));
+      logger.debug('Saved question to cache');
+    } catch (error) {
+      logger.warn('Failed to save to cache:', error);
+    }
+  };
 
   const fetchQuestion = useCallback(async () => {
     setLoading(true);
@@ -80,29 +130,53 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
     logger.debug('Starting daily question fetch');
     
     try {
-      const { data, error: fetchError } = await supabase.functions.invoke('get-trivia-question');
+      // First try to load from cache
+      const cached = await loadFromCache();
+      if (cached) {
+        setRawQuestionData(cached.question);
+        setUserStatus(cached.userStatus);
+        setLoading(false);
+        return;
+      }
+
+      // Get device ID for server request
+      const deviceId = await getDeviceId();
+      
+      // Fetch from server with device ID
+      const { data, error: fetchError } = await supabase.functions.invoke('get-trivia-question', {
+        headers: {
+          'x-device-id': deviceId
+        }
+      });
 
       if (fetchError) {
         logger.error('Error fetching daily question:', fetchError);
         setError('Failed to load daily question. Please try again later.');
         setErrorObject(fetchError);
         setRawQuestionData(null);
+        setUserStatus(null);
       } else if (data) {
-        logger.debug('Question data received, storing raw data...');
-        setRawQuestionData(data);
+        logger.debug('Question data received from server');
+        const { user_status, ...questionData } = data;
+        
+        setRawQuestionData(questionData);
+        setUserStatus(user_status);
         setError(null);
         setErrorObject(null);
+
+        // Cache the data
+        await saveToCache(questionData, user_status);
       } else {
         logger.warn('No question data received');
         const noDataError = new Error('No question found for today. Check back tomorrow!');
         setError('No question found for today. Check back tomorrow!');
         setErrorObject(noDataError);
         setRawQuestionData(null);
+        setUserStatus(null);
       }
     } catch (err) {
       logger.error('Unexpected error fetching question:', err);
       
-      // Report to async error boundary for global error handling
       if (err instanceof Error) {
         handleAsyncError(err);
       }
@@ -110,12 +184,47 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
       setError('An unexpected error occurred. Please try again.');
       setErrorObject(err);
       setRawQuestionData(null);
+      setUserStatus(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleAsyncError]);
 
-  // Memoized processing of question data - only recalculates when raw data changes
+  const markCompleted = useCallback(async () => {
+    if (!userStatus || userStatus.is_completed) return;
+
+    try {
+      const deviceId = await getDeviceId();
+      
+      const { data, error: markError } = await supabase.functions.invoke('mark-question-completed', {
+        headers: {
+          'x-device-id': deviceId
+        }
+      });
+
+      if (markError) {
+        logger.error('Error marking question as completed:', markError);
+        throw new Error('Failed to mark question as completed');
+      }
+
+      if (data && data.user_status) {
+        const newUserStatus = data.user_status;
+        setUserStatus(newUserStatus);
+        
+        // Update cache with new status
+        if (rawQuestionData) {
+          await saveToCache(rawQuestionData, newUserStatus);
+        }
+        
+        logger.debug('Question marked as completed successfully');
+      }
+    } catch (error) {
+      logger.error('Failed to mark question as completed:', error);
+      throw error;
+    }
+  }, [userStatus, rawQuestionData]);
+
+  // Memoized processing of question data
   const question = useMemo(() => {
     if (!rawQuestionData) {
       trackMemoization('useTriviaQuestion', true);
@@ -126,10 +235,9 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
     logger.debug('Processing question data with memoization...');
     
     return measurePerformance('question-data-processing', () => {
-      const triviaQuestion = rawQuestionData;
-      const decodedQuestion = decodeHtmlEntities(triviaQuestion.question || '');
-      const decodedIncorrectAnswers = (triviaQuestion.incorrect_answers || []).map((ans: string) => decodeHtmlEntities(ans || ''));
-      const decodedCorrectAnswer = decodeHtmlEntities(triviaQuestion.correct_answer || '');
+      const decodedQuestion = decodeHtmlEntities(rawQuestionData.question || '');
+      const decodedIncorrectAnswers = (rawQuestionData.incorrect_answers || []).map((ans: string) => decodeHtmlEntities(ans || ''));
+      const decodedCorrectAnswer = decodeHtmlEntities(rawQuestionData.correct_answer || '');
 
       const questionData: QuestionData = {
         question_text: decodedQuestion,
@@ -149,9 +257,11 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
 
   return {
     question,
+    userStatus,
     loading,
     error,
     errorObject,
     refetch: fetchQuestion,
+    markCompleted,
   };
 }

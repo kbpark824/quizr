@@ -9,11 +9,19 @@ interface QuestionData {
   correct_answer: string;
 }
 
-interface QuestionGameProps {
-  question: QuestionData;
+interface UserStatus {
+  has_attempted: boolean;
+  is_completed: boolean;
+  can_attempt: boolean;
 }
 
-const QuestionGame = memo(function QuestionGame({ question }: QuestionGameProps) {
+interface QuestionGameProps {
+  question: QuestionData;
+  userStatus: UserStatus | null;
+  onMarkCompleted: () => Promise<void>;
+}
+
+const QuestionGame = memo(function QuestionGame({ question, userStatus, onMarkCompleted }: QuestionGameProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [isPageFlipped, setIsPageFlipped] = useState(false);
@@ -32,13 +40,23 @@ const QuestionGame = memo(function QuestionGame({ question }: QuestionGameProps)
     return selectedAnswer.toLowerCase() === question.correct_answer.toLowerCase();
   }, [selectedAnswer, question.correct_answer]);
 
-  const handleFlipPage = useCallback(() => {
+  const handleFlipPage = useCallback(async () => {
     if (isPageFlipped) {
+      // Don't allow flipping back if already completed
+      if (userStatus?.is_completed) {
+        return;
+      }
       setIsPageFlipped(false);
       setSelectedAnswer(null);
       setMessage('');
       setShowCorrectAnswer(false);
     } else {
+      // Check if user can still attempt
+      if (userStatus?.is_completed) {
+        setMessage('You have already completed today&apos;s question. Come back tomorrow!');
+        return;
+      }
+
       if (selectedAnswer === null) {
         setMessage('Please select an answer before revealing.');
         return;
@@ -55,6 +73,17 @@ const QuestionGame = memo(function QuestionGame({ question }: QuestionGameProps)
         resultMessage = `Incorrect. The correct answer was: ${question.correct_answer}.`;
         setMessage(resultMessage);
       }
+      
+      // Mark question as completed
+      try {
+        await onMarkCompleted();
+        resultMessage += ' Thanks for playing today! Come back tomorrow for a new question.';
+        setMessage(resultMessage);
+      } catch (error) {
+        console.warn('Failed to mark question as completed:', error);
+        // Still show the result, just log the error
+      }
+
       // Announce the result to screen readers
       setAnnouncementText(resultMessage);
       
@@ -68,7 +97,28 @@ const QuestionGame = memo(function QuestionGame({ question }: QuestionGameProps)
         }
       }, 100);
     }
-  }, [question.correct_answer, selectedAnswer, isPageFlipped, isAnswerCorrect]);
+  }, [question.correct_answer, selectedAnswer, isPageFlipped, isAnswerCorrect, userStatus, onMarkCompleted]);
+
+  // Show completion status if user has already completed today's question
+  if (userStatus?.is_completed && !isPageFlipped) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.contentContainer}>
+          <DeskCalendarPage
+            question={question}
+            onFlip={handleFlipPage}
+            isFlipped={false}
+            onAnswerSelected={handleAnswerSelected}
+            selectedAnswer={selectedAnswer}
+            showAnswer={false}
+          />
+          <Text style={[styles.message, styles.completedMessage]}>
+            You&apos;ve already completed today&apos;s question! Come back tomorrow for a new challenge.
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -95,7 +145,7 @@ const QuestionGame = memo(function QuestionGame({ question }: QuestionGameProps)
             {message}
           </Text>
         )}
-        {!isPageFlipped && selectedAnswer && (
+        {!isPageFlipped && selectedAnswer && !userStatus?.is_completed && (
           <Text 
             style={styles.selectionMessage}
             accessible={true}
@@ -149,6 +199,10 @@ const styles = StyleSheet.create({
   },
   incorrectMessage: {
     color: LegacyColors.red,
+  },
+  completedMessage: {
+    color: LegacyColors.darkGray,
+    fontStyle: 'italic',
   },
   selectionMessage: {
     marginTop: 10,

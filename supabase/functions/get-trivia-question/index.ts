@@ -1,4 +1,10 @@
+// @ts-ignore - Deno runtime types not available in development
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-ignore - ESM module types not available in development
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Declare Deno global for development (exists at runtime)
+declare const Deno: any;
 
 // Define a constant for the Open Trivia Database API success response code
 const TRIVIA_API_SUCCESS_CODE = 0;
@@ -265,6 +271,152 @@ class RateLimiter {
 // Create global rate limiter instance
 const rateLimiter = new RateLimiter();
 
+// Initialize Supabase client with service role key for database operations
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+// Helper function to get today's date in YYYY-MM-DD format (UTC)
+const getTodaysDate = (): string => {
+  return new Date().toISOString().split('T')[0];
+};
+
+// Helper function to get or create daily question
+const getOrCreateDailyQuestion = async (questionDate: string) => {
+  // First, check if question already exists for today
+  const { data: existingQuestion, error: fetchError } = await supabase
+    .from('daily_questions')
+    .select('*')
+    .eq('question_date', questionDate)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+    throw new Error(`Database error fetching daily question: ${fetchError.message}`);
+  }
+
+  // If question exists, return it
+  if (existingQuestion) {
+    return {
+      id: existingQuestion.id,
+      question: existingQuestion.question_text,
+      correct_answer: existingQuestion.correct_answer,
+      incorrect_answers: existingQuestion.incorrect_answers,
+      category: existingQuestion.category,
+      type: existingQuestion.question_type,
+      difficulty: existingQuestion.difficulty
+    };
+  }
+
+  // If no question exists, fetch from API and store it
+  const response = await fetch(OPEN_TRIVIA_DB_API_URL);
+  
+  if (!response.ok) {
+    throw new Error(`OpenTriviaDB API returned ${response.status}: ${response.statusText}`);
+  }
+  
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    throw new Error('OpenTriviaDB API returned non-JSON response');
+  }
+  
+  const data = await response.json();
+  const validatedQuestion = validateQuestionData(data);
+  
+  if (data.response_code !== TRIVIA_API_SUCCESS_CODE) {
+    throw new Error("Failed to fetch trivia question from Open Trivia Database API");
+  }
+
+  // Store the question in database
+  const { data: storedQuestion, error: insertError } = await supabase
+    .from('daily_questions')
+    .insert({
+      question_date: questionDate,
+      question_text: validatedQuestion.question,
+      correct_answer: validatedQuestion.correct_answer,
+      incorrect_answers: validatedQuestion.incorrect_answers,
+      category: validatedQuestion.category,
+      difficulty: validatedQuestion.difficulty,
+      question_type: validatedQuestion.type
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    // If insert failed due to race condition (question already exists), fetch the existing one
+    if (insertError.code === '23505') { // unique_violation
+      const { data: existingQuestion, error: fetchError } = await supabase
+        .from('daily_questions')
+        .select('*')
+        .eq('question_date', questionDate)
+        .single();
+      
+      if (fetchError) {
+        throw new Error(`Failed to fetch existing daily question after race condition: ${fetchError.message}`);
+      }
+      
+      return {
+        id: existingQuestion.id,
+        question: existingQuestion.question_text,
+        correct_answer: existingQuestion.correct_answer,
+        incorrect_answers: existingQuestion.incorrect_answers,
+        category: existingQuestion.category,
+        type: existingQuestion.question_type,
+        difficulty: existingQuestion.difficulty
+      };
+    }
+    throw new Error(`Failed to store daily question: ${insertError.message}`);
+  }
+
+  return {
+    id: storedQuestion.id,
+    question: validatedQuestion.question,
+    correct_answer: validatedQuestion.correct_answer,
+    incorrect_answers: validatedQuestion.incorrect_answers,
+    category: validatedQuestion.category,
+    type: validatedQuestion.type,
+    difficulty: validatedQuestion.difficulty
+  };
+};
+
+// Helper function to get or create user attempt record
+const getOrCreateUserAttempt = async (deviceId: string, questionDate: string, dailyQuestionId: string) => {
+  // Check if user attempt record exists
+  const { data: existingAttempt, error: fetchError } = await supabase
+    .from('user_question_attempts')
+    .select('*')
+    .eq('device_id', deviceId)
+    .eq('question_date', questionDate)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    throw new Error(`Database error fetching user attempt: ${fetchError.message}`);
+  }
+
+  // If attempt exists, return it
+  if (existingAttempt) {
+    return existingAttempt;
+  }
+
+  // Create new attempt record
+  const { data: newAttempt, error: insertError } = await supabase
+    .from('user_question_attempts')
+    .insert({
+      device_id: deviceId,
+      question_date: questionDate,
+      daily_question_id: dailyQuestionId,
+      has_attempted: false,
+      is_completed: false
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    throw new Error(`Failed to create user attempt record: ${insertError.message}`);
+  }
+
+  return newAttempt;
+};
+
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
   'exp://localhost:19000',  // Expo development server
@@ -328,29 +480,28 @@ serve(async (req) => {
   }
 
   try {
-    const response = await fetch(OPEN_TRIVIA_DB_API_URL);
+    // Get device ID from headers (client should send this)
+    const deviceId = req.headers.get('x-device-id') || req.headers.get('x-forwarded-for') || 'anonymous';
+    const questionDate = getTodaysDate();
+
+    // Get or create today's daily question
+    const dailyQuestion = await getOrCreateDailyQuestion(questionDate);
     
-    // Validate HTTP response
-    if (!response.ok) {
-      throw new Error(`OpenTriviaDB API returned ${response.status}: ${response.statusText}`);
-    }
-    
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('OpenTriviaDB API returned non-JSON response');
-    }
-    
-    const data = await response.json();
-    
-    // Validate and sanitize the response data
-    const validatedQuestion = validateQuestionData(data);
-    
-    if (data.response_code !== TRIVIA_API_SUCCESS_CODE) {
-      throw new Error("Failed to fetch trivia question from Open Trivia Database API");
-    }
+    // Get or create user attempt record
+    const userAttempt = await getOrCreateUserAttempt(deviceId, questionDate, dailyQuestion.id);
+
+    // Return question with user attempt status
+    const responseData = {
+      ...dailyQuestion,
+      user_status: {
+        has_attempted: userAttempt.has_attempted,
+        is_completed: userAttempt.is_completed,
+        can_attempt: !userAttempt.is_completed
+      }
+    };
 
     return new Response(
-      JSON.stringify(validatedQuestion),
+      JSON.stringify(responseData),
       { headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
   } catch (error) {

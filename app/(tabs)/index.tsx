@@ -35,7 +35,7 @@ export default function QuestionScreen() {
 }
 
 function QuestionScreenContent() {
-  const { question, loading, error, errorObject, refetch } = useTriviaQuestion();
+  const { question, userStatus, loading, error, errorObject, refetch, markCompleted } = useTriviaQuestion();
 
   if (loading) {
     return <LoadingState />;
@@ -49,10 +49,14 @@ function QuestionScreenContent() {
     return <ErrorState message="No question available. Please try again." onRetry={refetch} />;
   }
 
-  logger.debug('Rendering QuestionGame');
+  logger.debug('Rendering QuestionGame with user status:', userStatus);
   return (
     <SectionErrorBoundary sectionName="Question Game">
-      <QuestionGame question={question} />
+      <QuestionGame 
+        question={question} 
+        userStatus={userStatus}
+        onMarkCompleted={markCompleted}
+      />
     </SectionErrorBoundary>
   );
 }
