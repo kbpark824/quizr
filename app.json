@@ -2,7 +2,7 @@
   "expo": {
     "name": "Quizr",
     "slug": "quizr",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "quizr",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "app.quizr",
-      "supportsTablet": true
+      "supportsTablet": false
     },
     "android": {
       "package": "app.quizr",
@@ -18,7 +18,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "supportsTablet": false
     },
     "web": {
       "bundler": "metro",
@@ -30,10 +31,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "image": "./assets/images/splash-screen.png",
+          "resizeMode": "cover"
         }
       ],
       [

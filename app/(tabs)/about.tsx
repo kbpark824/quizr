@@ -35,7 +35,7 @@ export default function AboutScreen() {
           variant="tertiary"
           size="medium"
           fullWidth
-          onPress={() => handlePressLink('https://www.quizr.app/privacy')}
+          onPress={() => handlePressLink('https://quizr.app/privacy-policy')}
           accessible={true}
           accessibilityLabel="Privacy Policy link"
           accessibilityHint="Opens the Quizr privacy policy in your browser"
@@ -73,7 +73,7 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'flex-start', // Align content to the start
+    alignItems: 'center', // Center align all content
     paddingTop: Spacing.xxxl + 36, // Increased padding to move content lower
     paddingHorizontal: Spacing.padding.container, // Keep horizontal padding
     backgroundColor: LegacyColors.lightGray, // Match page background
