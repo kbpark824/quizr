@@ -30,9 +30,13 @@ const QuestionGame = memo(function QuestionGame({ question, userStatus, onMarkCo
   const messageRef = useRef<Text>(null);
 
   const handleAnswerSelected = useCallback((option: string) => {
+    // Don't allow answer changes if user has already completed the question
+    if (userStatus?.is_completed) {
+      return;
+    }
     setSelectedAnswer(option);
     setAnnouncementText(`Selected answer: ${option}`);
-  }, []);
+  }, [userStatus?.is_completed]);
 
   // Memoize the result calculation to avoid repeated computation
   const isAnswerCorrect = useMemo(() => {
@@ -42,22 +46,14 @@ const QuestionGame = memo(function QuestionGame({ question, userStatus, onMarkCo
 
   const handleFlipPage = useCallback(async () => {
     if (isPageFlipped) {
-      // Don't allow flipping back if already completed
-      if (userStatus?.is_completed) {
-        return;
-      }
+      // Allow flipping back to question view (but don't reset selected answer)
       setIsPageFlipped(false);
-      setSelectedAnswer(null);
       setMessage('');
       setShowCorrectAnswer(false);
+      // Keep selectedAnswer intact so user can see their previous choice
     } else {
-      // Check if user can still attempt
-      if (userStatus?.is_completed) {
-        setMessage('You have already completed today&apos;s question. Come back tomorrow!');
-        return;
-      }
-
-      if (selectedAnswer === null) {
+      // If user hasn't completed and hasn't selected an answer, require selection first
+      if (!userStatus?.is_completed && selectedAnswer === null) {
         setMessage('Please select an answer before revealing.');
         return;
       }
@@ -65,13 +61,16 @@ const QuestionGame = memo(function QuestionGame({ question, userStatus, onMarkCo
       setIsPageFlipped(true);
       setShowCorrectAnswer(true);
       
+      // If already completed, just flip to show answer again without re-processing
+      if (userStatus?.is_completed) {
+        return;
+      }
+      
       let resultMessage = '';
       if (isAnswerCorrect) {
         resultMessage = 'Congratulations! You got it right!';
-        setMessage(resultMessage);
       } else {
         resultMessage = `Incorrect. The correct answer was: ${question.correct_answer}.`;
-        setMessage(resultMessage);
       }
       
       // Mark question as completed
@@ -81,7 +80,8 @@ const QuestionGame = memo(function QuestionGame({ question, userStatus, onMarkCo
         setMessage(resultMessage);
       } catch (error) {
         console.warn('Failed to mark question as completed:', error);
-        // Still show the result, just log the error
+        // Still show the result even if completion failed
+        setMessage(resultMessage);
       }
 
       // Announce the result to screen readers
@@ -111,6 +111,7 @@ const QuestionGame = memo(function QuestionGame({ question, userStatus, onMarkCo
             onAnswerSelected={handleAnswerSelected}
             selectedAnswer={selectedAnswer}
             showAnswer={false}
+            isCompleted={userStatus?.is_completed}
           />
           <Text style={[styles.message, styles.completedMessage]}>
             You&apos;ve already completed today&apos;s question! Come back tomorrow for a new challenge.
@@ -130,6 +131,7 @@ const QuestionGame = memo(function QuestionGame({ question, userStatus, onMarkCo
           onAnswerSelected={handleAnswerSelected}
           selectedAnswer={selectedAnswer}
           showAnswer={showCorrectAnswer}
+          isCompleted={userStatus?.is_completed}
         />
         {isPageFlipped && (
           <Text 

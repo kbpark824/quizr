@@ -92,6 +92,7 @@ interface DeskCalendarPageProps {
   onAnswerSelected: (answer: string) => void;
   selectedAnswer: string | null;
   showAnswer: boolean; // To control when to show the correct correct_answer on the back
+  isCompleted?: boolean; // To disable answer selection when question is completed
 }
 
 const DeskCalendarPage = memo(function DeskCalendarPage({
@@ -101,6 +102,7 @@ const DeskCalendarPage = memo(function DeskCalendarPage({
   onAnswerSelected,
   selectedAnswer,
   showAnswer,
+  isCompleted = false,
 }: DeskCalendarPageProps) {
   useEffect(() => {
     trackRender('DeskCalendarPage');
@@ -174,18 +176,23 @@ const DeskCalendarPage = memo(function DeskCalendarPage({
               {question.answer_options.map((option, index) => (
                 <Button
                   key={option}
-                  title={`${index + 1}. ${option}`}
+                  title={`${index + 1}. ${option}${selectedAnswer === option && isCompleted ? " ✓" : ""}`}
                   variant={selectedAnswer === option ? "primary" : "option"}
                   size="medium"
                   fullWidth
-                  onPress={() => onAnswerSelected(option)}
+                  onPress={() => isCompleted ? null : onAnswerSelected(option)}
+                  disabled={isCompleted && selectedAnswer !== option}
                   accessible={true}
-                  accessibilityLabel={`${index + 1}. ${option}`}
-                  accessibilityHint="Selects this as your answer"
+                  accessibilityLabel={`${index + 1}. ${option}${selectedAnswer === option && isCompleted ? " - Your answer" : ""}`}
+                  accessibilityHint={isCompleted ? "This question has been completed" : "Selects this as your answer"}
                   accessibilityState={{ 
-                    selected: selectedAnswer === option 
+                    selected: selectedAnswer === option,
+                    disabled: isCompleted
                   }}
-                  style={styles.optionButton}
+                  style={[
+                    styles.optionButton,
+                    isCompleted && selectedAnswer === option && styles.selectedCompletedButton
+                  ]}
                 />
               ))}
             </View>
@@ -215,12 +222,12 @@ const DeskCalendarPage = memo(function DeskCalendarPage({
               <Text style={styles.answerText}>Flip to reveal...</Text>
             )}
             <Button
-              title="Back to Question"
+              title="Reveal Answer"
               variant="flip"
               size="medium"
               onPress={onFlip}
               accessible={true}
-              accessibilityLabel="Back to Question button"
+              accessibilityLabel="Reveal Answer button"
               accessibilityHint="Flips the card back to the question side"
               style={styles.flipButton}
             />
@@ -324,5 +331,8 @@ const styles = StyleSheet.create({
     ...Typography.sizes.titleSmall,
     textAlign: 'center',
     color: LegacyColors.black,
+  },
+  selectedCompletedButton: {
+    opacity: 1, // Override the disabled opacity to keep the selected answer visible
   },
 });
