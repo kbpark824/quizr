@@ -140,7 +140,7 @@ export default function RootLayout() {
 
   return (
     <AppErrorBoundary>
-      <ThemeProvider> {/* Use our custom ThemeProvider */}
+      <ThemeProvider>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />

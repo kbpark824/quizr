@@ -130,7 +130,7 @@ const DeskCalendarPage = memo(function DeskCalendarPage({
         accessibilityRole="header"
         accessibilityLabel={`Today's date: ${dateInfo.dayOfWeek}, ${dateInfo.month} ${dateInfo.dayOfMonth}, ${dateInfo.year}`}
       >
-        <View style={styles.dateBorderContainer}> {/* New container for the white border */}
+        <View style={styles.dateBorderContainer}>
           <Text 
             style={styles.dayOfMonthText}
             accessible={true}
@@ -213,7 +213,7 @@ const DeskCalendarPage = memo(function DeskCalendarPage({
 
       {/* Back of the card (Answer) */}
       {isFlipped && (
-        <View style={styles.cardFace}> {/* Using cardFace for back as well for consistent styling */}
+        <View style={styles.cardFace}>
           <View style={styles.cardContent}>
             <Text style={styles.answerLabel}>Correct Answer:</Text>
             {showAnswer ? (
@@ -222,12 +222,12 @@ const DeskCalendarPage = memo(function DeskCalendarPage({
               <Text style={styles.answerText}>Flip to reveal...</Text>
             )}
             <Button
-              title="Reveal Answer"
+              title="Back to Question"
               variant="flip"
               size="medium"
               onPress={onFlip}
               accessible={true}
-              accessibilityLabel="Reveal Answer button"
+              accessibilityLabel="Back to Question button"
               accessibilityHint="Flips the card back to the question side"
               style={styles.flipButton}
             />
