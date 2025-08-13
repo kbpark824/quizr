@@ -11,7 +11,10 @@
     "ios": {
       "bundleIdentifier": "app.quizr",
       "supportsTablet": false,
-      "deploymentTarget": "15.1"
+      "deploymentTarget": "15.1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "app.quizr",
@@ -62,7 +65,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "${EXPO_PUBLIC_PROJECT_ID}"
+        "projectId": "21e4cbd4-d3f3-4b3c-ac90-2b141601e379"
       }
     },
     "owner": "kbpark824"
