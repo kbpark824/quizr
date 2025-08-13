@@ -2,7 +2,7 @@
   "expo": {
     "name": "Quizr",
     "slug": "quizr",
-    "version": "0.2.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "quizr",
@@ -10,7 +10,8 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "app.quizr",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "deploymentTarget": "15.1"
     },
     "android": {
       "package": "app.quizr",
@@ -61,7 +62,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "${EXPO_PUBLIC_EAS_PROJECT_ID}"
+        "projectId": "${EXPO_PUBLIC_PROJECT_ID}"
       }
     },
     "owner": "kbpark824"

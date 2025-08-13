@@ -14,11 +14,17 @@ Quizr is a simple daily trivia app that delivers one trivia question per day via
 - **How**: Automatically collected when you first open the app and allow notifications
 - **Storage**: Stored securely in our Supabase database
 
-### Usage Information
-- **What**: Basic app usage statistics (app crashes, performance metrics)
-- **Why**: To improve app stability and performance
-- **How**: Automatically collected during app usage
-- **Note**: This data is anonymous and not linked to you personally
+### Anonymous Device Identifiers
+- **What**: Anonymous device identifier (generated unique string like "device_1736789123_abc123def")
+- **Why**: To track which daily questions you've completed
+- **How**: Generated automatically when you first use the app
+- **Storage**: Stored locally on your device and in our Supabase database
+
+### Question Completion Tracking
+- **What**: Record of which daily questions you've attempted/completed (no answers stored)
+- **Why**: To show your progress and prevent duplicate questions
+- **How**: Tracked when you view or complete daily trivia questions
+- **Note**: Only completion status is stored, not your actual answers
 
 ## What Data We DON'T Collect
 
@@ -27,7 +33,7 @@ We do **not** collect:
 - User accounts or login credentials
 - Your answers to trivia questions
 - Location data
-- Contact lists or device information beyond what's necessary for notifications
+- Contact lists or other device information beyond anonymous identifiers
 - Any data that can personally identify you
 
 ## How We Use Your Data
@@ -37,18 +43,23 @@ We do **not** collect:
 - Ensure notifications are delivered to your device
 - Remove invalid or expired tokens from our system
 
-### Usage Information
-- Monitor app performance and stability
-- Identify and fix bugs or crashes
-- Improve the overall user experience
+### Anonymous Device Identifiers
+- Track your daily question completion progress
+- Prevent showing you the same question twice
+- Maintain your trivia streak across app sessions
+
+### Question Completion Data
+- Display your daily trivia progress
+- Ensure each user gets one question per day
+- Maintain app functionality without requiring user accounts
 
 ## Data Sharing
 
 We use these third-party services:
 
 ### Supabase
-- **Purpose**: Database storage for push notification tokens
-- **Data shared**: Push notification tokens only
+- **Purpose**: Database storage for push notification tokens and question completion tracking
+- **Data shared**: Push notification tokens and anonymous device identifiers with completion status
 - **Privacy policy**: [Supabase Privacy Policy](https://supabase.com/privacy)
 
 ### Expo Push Notification Service
@@ -69,8 +80,9 @@ We do **not**:
 ## Data Retention
 
 - **Push tokens**: Stored until you uninstall the app or the token expires
-- **Usage data**: Retained for up to 90 days for debugging purposes
-- **Automatic cleanup**: Invalid tokens are automatically removed from our system
+- **Device identifiers**: Stored locally on your device and in our database indefinitely
+- **Question completion data**: Retained to maintain your progress history
+- **Automatic cleanup**: Invalid push tokens are automatically removed from our system
 
 ## Your Rights and Choices
 
@@ -79,12 +91,12 @@ We do **not**:
 - **Uninstall**: Simply delete the app to stop all data collection
 
 ### Data Deletion
-- **Automatic**: Uninstalling the app will stop data collection
-- **Manual request**: Email us at support@quizr.app to request deletion of your push token
+- **Automatic**: Uninstalling the app will stop data collection and remove local device identifier
+- **Manual request**: Email us at support@quizr.app to request deletion of your push token and completion data
 
 ### Data Access
-- **What we have**: We can tell you if we have a push token for your device
-- **Request access**: Email support@quizr.app with your request
+- **What we have**: We can tell you if we have a push token and completion data for your device
+- **Request access**: Email support@quizr.app with your request and device information
 
 ## Data Security
 
@@ -124,4 +136,4 @@ If you're in the European Union, our legal basis for processing your data is:
 
 ---
 
-*This privacy policy is designed to be simple and transparent, just like our app. We collect only what's necessary to deliver daily trivia questions to your device.*
+*This privacy policy is designed to be simple and transparent, just like our app. We collect only what's necessary to deliver daily trivia questions and track your progress without requiring user accounts.*

@@ -25,12 +25,12 @@ interface EnvironmentConfig {
 }
 
 function validateEnvironmentVariables(): EnvironmentConfig {
-  const projectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID;
+  const projectId = process.env.EXPO_PUBLIC_PROJECT_ID;
   
   // Check if project ID exists
   if (!projectId) {
     throw new Error(
-      'Missing required environment variable: EXPO_PUBLIC_EAS_PROJECT_ID. ' +
+      'Missing required environment variable: EXPO_PUBLIC_PROJECT_ID. ' +
       'Please ensure this is set in your environment configuration.'
     );
   }
@@ -38,7 +38,7 @@ function validateEnvironmentVariables(): EnvironmentConfig {
   // Validate project ID format - should be a UUID-like string
   if (typeof projectId !== 'string' || projectId.trim().length === 0) {
     throw new Error(
-      'Invalid EXPO_PUBLIC_EAS_PROJECT_ID: must be a non-empty string'
+      'Invalid EXPO_PUBLIC_PROJECT_ID: must be a non-empty string'
     );
   }
   
@@ -46,7 +46,7 @@ function validateEnvironmentVariables(): EnvironmentConfig {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(projectId.trim())) {
     throw new Error(
-      'Invalid EXPO_PUBLIC_EAS_PROJECT_ID format: must be a valid UUID ' +
+      'Invalid EXPO_PUBLIC_PROJECT_ID format: must be a valid UUID ' +
       '(e.g., "123e4567-e89b-12d3-a456-426614174000")'
     );
   }

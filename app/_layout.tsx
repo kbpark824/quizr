@@ -88,7 +88,7 @@ export default function RootLayout() {
     logger.debug('Environment configuration check:', {
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing',
-      easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ? 'Set' : 'Missing'
+      easProjectId: process.env.EXPO_PUBLIC_PROJECT_ID ? 'Set' : 'Missing'
     });
 
     logger.debug('Attempting to register for push notifications...');
