@@ -37,6 +37,21 @@
     }
   },
   "submit": {
-    "production": {}
+    "development": {
+      "ios": {},
+      "android": {}
+    },
+    "production": {
+      "ios": {},
+      "android": {}
+    }
+  },
+  "update": {
+    "development": {
+      "channel": "development"
+    },
+    "production": {
+      "channel": "production"
+    }
   }
 }

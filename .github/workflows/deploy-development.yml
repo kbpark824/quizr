@@ -1,0 +1,46 @@
+name: Deploy Backend to Development
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Minimal permissions following security best practices
+permissions:
+  contents: read
+
+jobs:
+  deploy-development:
+    name: Deploy Backend to Development Environment
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Supabase CLI
+        run: |
+          npm install -g supabase@latest
+
+      - name: Deploy Supabase functions and migrations
+        run: |
+          # Link to development project
+          supabase link --project-ref ${{ secrets.DEV_SUPABASE_PROJECT_REF }}
+          
+          # Deploy database migrations
+          supabase db push
+          
+          # Deploy edge functions
+          supabase functions deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}

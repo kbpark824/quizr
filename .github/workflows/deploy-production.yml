@@ -1,0 +1,57 @@
+name: Deploy Backend to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: 'Type "DEPLOY" to confirm deployment to production'
+        required: true
+        type: string
+
+# Minimal permissions following security best practices
+permissions:
+  contents: read
+
+jobs:
+  deploy-production:
+    name: Deploy Backend to Production Environment
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Verify production confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_production }}" != "DEPLOY" ]; then
+            echo "❌ Production deployment not confirmed. Please type 'DEPLOY' exactly."
+            exit 1
+          fi
+          echo "✅ Production deployment confirmed"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Supabase CLI
+        run: |
+          npm install -g supabase@latest
+
+      - name: Deploy Supabase functions and migrations
+        run: |
+          # Link to production project
+          supabase link --project-ref ${{ secrets.PROD_SUPABASE_PROJECT_REF }}
+          
+          # Deploy database migrations
+          supabase db push
+          
+          # Deploy edge functions
+          supabase functions deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}
