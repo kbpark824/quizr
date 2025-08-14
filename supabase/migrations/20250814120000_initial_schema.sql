@@ -36,6 +36,17 @@ CREATE TABLE user_question_attempts (
   UNIQUE(device_id, question_date)
 );
 
+-- Grant basic permissions to anon role
+GRANT USAGE ON SCHEMA public TO anon;
+
+-- Grant specific permissions only on tables that need them
+GRANT SELECT, INSERT, UPDATE ON push_tokens TO anon;
+GRANT SELECT ON daily_questions TO anon;
+GRANT SELECT, INSERT, UPDATE ON user_question_attempts TO anon;
+
+-- Grant usage on sequences for auto-generated IDs
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO anon;
+
 -- Enable Row Level Security
 ALTER TABLE push_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_questions ENABLE ROW LEVEL SECURITY;
@@ -43,13 +54,13 @@ ALTER TABLE user_question_attempts ENABLE ROW LEVEL SECURITY;
 
 -- Policies for push_tokens table
 CREATE POLICY "Allow anon insert push tokens" ON push_tokens
-  FOR INSERT WITH CHECK (TRUE);
+  FOR INSERT TO anon WITH CHECK (TRUE);
 
 CREATE POLICY "Allow anon read push tokens" ON push_tokens
-  FOR SELECT USING (TRUE);
+  FOR SELECT TO anon USING (TRUE);
 
 CREATE POLICY "Allow anon update push tokens" ON push_tokens
-  FOR UPDATE USING (TRUE);
+  FOR UPDATE TO anon USING (TRUE);
 
 -- Policies for daily_questions table
 CREATE POLICY "Allow anon read daily questions" ON daily_questions
