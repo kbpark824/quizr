@@ -1,0 +1,2 @@
+-- Production sync migration to match expected migration history
+-- This migration represents the state expected by production

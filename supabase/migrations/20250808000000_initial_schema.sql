@@ -1,0 +1,2 @@
+-- Initial schema setup for production sync
+-- This migration represents the baseline state
