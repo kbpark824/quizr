@@ -2,7 +2,7 @@
   "expo": {
     "name": "Quizr",
     "slug": "quizr",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "quizr",
@@ -11,19 +11,18 @@
     "ios": {
       "bundleIdentifier": "app.quizr",
       "supportsTablet": false,
-      "deploymentTarget": "15.1",
       "config": {
         "usesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "app.quizr",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "supportsTablet": false
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
@@ -36,7 +35,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-screen.png",
-          "resizeMode": "cover"
+          "resizeMode": "contain"
         }
       ],
       [
@@ -66,7 +65,9 @@
       "router": {},
       "eas": {
         "projectId": "21e4cbd4-d3f3-4b3c-ac90-2b141601e379"
-      }
+      },
+      "supabaseUrl": "https://lfqeggflxettlurctgbm.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmcWVnZ2ZseGV0dGx1cmN0Z2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2ODYyNjYsImV4cCI6MjA3MDI2MjI2Nn0.ioIF9PdqOpN1f5I9FKiZuM1nkqYIURa9pxbm_spg-xE"
     },
     "owner": "kbpark824"
   }

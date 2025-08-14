@@ -18,24 +18,25 @@
 
 import { createClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
+import Constants from 'expo-constants';
 
-// Enhanced environment variable validation
-function validateSupabaseEnvironment(): { url: string; anonKey: string } {
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// Enhanced configuration validation
+function validateSupabaseConfiguration(): { url: string; anonKey: string } {
+  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+  const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
 
-  // Check for missing environment variables
+  // Check for missing configuration
   if (!supabaseUrl) {
     throw new Error(
-      'Missing required environment variable: EXPO_PUBLIC_SUPABASE_URL. ' +
-      'Please ensure your Supabase project URL is configured in your environment.'
+      'Missing required configuration: supabaseUrl. ' +
+      'Please ensure your Supabase project URL is configured in app.json extra section.'
     );
   }
 
   if (!supabaseAnonKey) {
     throw new Error(
-      'Missing required environment variable: EXPO_PUBLIC_SUPABASE_ANON_KEY. ' +
-      'Please ensure your Supabase anonymous key is configured in your environment.'
+      'Missing required configuration: supabaseAnonKey. ' +
+      'Please ensure your Supabase anonymous key is configured in app.json extra section.'
     );
   }
 
@@ -90,8 +91,8 @@ function validateSupabaseEnvironment(): { url: string; anonKey: string } {
   };
 }
 
-// Validate environment and create client
-const config = validateSupabaseEnvironment();
+// Validate configuration and create client
+const config = validateSupabaseConfiguration();
 
 export const supabase = createClient(config.url, config.anonKey, {
   db: { schema: 'public' },
@@ -106,7 +107,7 @@ export const supabase = createClient(config.url, config.anonKey, {
 // Export configuration validation function for testing/debugging
 export const validateConfiguration = (): boolean => {
   try {
-    validateSupabaseEnvironment();
+    validateSupabaseConfiguration();
     return true;
   } catch (error) {
     console.error('Supabase configuration validation failed:', error);

@@ -27,7 +27,8 @@
       "ios": {
         "resourceClass": "m-medium", 
         "buildConfiguration": "Release",
-        "image": "macos-sonoma-14.6-xcode-16.1"
+        "image": "macos-sonoma-14.6-xcode-16.1",
+        "deploymentTarget": "15.1"
       },
       "android": {
         "buildType": "app-bundle",

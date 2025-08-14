@@ -23,6 +23,7 @@ import * as Notifications from 'expo-notifications';
 import 'react-native-reanimated';
 import React, { useEffect, useRef } from 'react';
 import { supabase } from '@/supabaseClient';
+import Constants from 'expo-constants';
 
 // Removed unused useColorScheme import
 import { registerForPushNotificationsAsync, NotificationError } from '../utils/notifications';
@@ -64,11 +65,16 @@ const sendPushTokenToSupabase = async (token: string) => {
     return;
   }
   
-  logger.debug('Attempting to upsert validated token to Supabase');
-  const { error } = await supabase.from('push_tokens').upsert({ token: token }, { onConflict: 'token' });
+  logger.debug('Attempting to insert validated token to Supabase');
+  const { error } = await supabase.from('push_tokens').insert({ token: token });
   
   if (error) {
-    logger.error('Error saving push token to Supabase:', error);
+    // If it's a duplicate key error (token already exists), that's fine
+    if (error.code === '23505') {
+      logger.debug('Push token already registered');
+    } else {
+      logger.error('Error saving push token to Supabase:', error);
+    }
   } else {
     logger.debug('Push token saved to Supabase successfully.');
   }
@@ -85,10 +91,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     // Log configuration status without exposing sensitive values
-    logger.debug('Environment configuration check:', {
-      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
-      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing',
-      easProjectId: process.env.EXPO_PUBLIC_PROJECT_ID ? 'Set' : 'Missing'
+    logger.debug('Configuration check:', {
+      supabaseUrl: Constants.expoConfig?.extra?.supabaseUrl ? 'Set' : 'Missing',
+      supabaseAnonKey: Constants.expoConfig?.extra?.supabaseAnonKey ? 'Set' : 'Missing',
+      easProjectId: Constants.expoConfig?.extra?.eas?.projectId ? 'Set' : 'Missing'
     });
 
     logger.debug('Attempting to register for push notifications...');

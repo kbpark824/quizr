@@ -18,20 +18,21 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Environment variable validation utilities
-interface EnvironmentConfig {
+interface NotificationConfig {
   projectId: string;
 }
 
-function validateEnvironmentVariables(): EnvironmentConfig {
-  const projectId = process.env.EXPO_PUBLIC_PROJECT_ID;
+function validateConfiguration(): NotificationConfig {
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId;
   
   // Check if project ID exists
   if (!projectId) {
     throw new Error(
-      'Missing required environment variable: EXPO_PUBLIC_PROJECT_ID. ' +
-      'Please ensure this is set in your environment configuration.'
+      'Missing required configuration: projectId. ' +
+      'Please ensure this is set in app.json extra.eas.projectId.'
     );
   }
   
@@ -72,8 +73,8 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
   let token: string | undefined;
 
   try {
-    // Validate environment configuration first
-    const config = validateEnvironmentVariables();
+    // Validate configuration first
+    const config = validateConfiguration();
 
     // Set up Android notification channel
     if (Platform.OS === 'android') {
@@ -166,7 +167,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
 // Utility function to check if notifications are properly configured
 export function validateNotificationConfig(): boolean {
   try {
-    validateEnvironmentVariables();
+    validateConfiguration();
     return true;
   } catch (error) {
     console.error('Notification configuration validation failed:', error);
