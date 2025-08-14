@@ -1,4 +1,12 @@
--- Create tables for daily question persistence and user tracking
+-- Initial schema for quizr application
+-- Creates all required tables and policies
+
+-- Table to store push notification tokens
+CREATE TABLE push_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  token TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- Table to store one question per day (global)
 CREATE TABLE daily_questions (
@@ -16,7 +24,7 @@ CREATE TABLE daily_questions (
 -- Table to track user attempts for each daily question
 CREATE TABLE user_question_attempts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  device_id TEXT NOT NULL, -- Using device identifier since no auth
+  device_id TEXT NOT NULL,
   question_date DATE NOT NULL,
   daily_question_id UUID NOT NULL REFERENCES daily_questions(id),
   has_attempted BOOLEAN DEFAULT FALSE,
@@ -29,8 +37,19 @@ CREATE TABLE user_question_attempts (
 );
 
 -- Enable Row Level Security
+ALTER TABLE push_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_question_attempts ENABLE ROW LEVEL SECURITY;
+
+-- Policies for push_tokens table
+CREATE POLICY "Allow anon insert push tokens" ON push_tokens
+  FOR INSERT WITH CHECK (TRUE);
+
+CREATE POLICY "Allow anon read push tokens" ON push_tokens
+  FOR SELECT USING (TRUE);
+
+CREATE POLICY "Allow anon update push tokens" ON push_tokens
+  FOR UPDATE USING (TRUE);
 
 -- Policies for daily_questions table
 CREATE POLICY "Allow anon read daily questions" ON daily_questions
@@ -47,6 +66,7 @@ CREATE POLICY "Allow anon update own attempts" ON user_question_attempts
   FOR UPDATE USING (TRUE);
 
 -- Create indexes for performance
+CREATE INDEX idx_push_tokens_token ON push_tokens(token);
 CREATE INDEX idx_daily_questions_date ON daily_questions(question_date);
 CREATE INDEX idx_user_attempts_device_date ON user_question_attempts(device_id, question_date);
 CREATE INDEX idx_user_attempts_question_id ON user_question_attempts(daily_question_id);
