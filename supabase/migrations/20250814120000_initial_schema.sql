@@ -64,17 +64,17 @@ CREATE POLICY "Allow anon update push tokens" ON push_tokens
 
 -- Policies for daily_questions table
 CREATE POLICY "Allow anon read daily questions" ON daily_questions
-  FOR SELECT USING (TRUE);
+  FOR SELECT TO anon USING (TRUE);
 
 -- Policies for user_question_attempts table  
 CREATE POLICY "Allow anon read own attempts" ON user_question_attempts
-  FOR SELECT USING (TRUE);
+  FOR SELECT TO anon USING (TRUE);
 
 CREATE POLICY "Allow anon insert attempts" ON user_question_attempts
-  FOR INSERT WITH CHECK (TRUE);
+  FOR INSERT TO anon WITH CHECK (TRUE);
 
 CREATE POLICY "Allow anon update own attempts" ON user_question_attempts
-  FOR UPDATE USING (TRUE);
+  FOR UPDATE TO anon USING (TRUE);
 
 -- Create indexes for performance
 CREATE INDEX idx_push_tokens_token ON push_tokens(token);
