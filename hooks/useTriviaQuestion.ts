@@ -142,15 +142,23 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
       const deviceId = await getDeviceId();
       
       // Fetch from server with device ID
-      const { data, error: fetchError } = await supabase.functions.invoke('get-trivia-question', {
+      logger.debug('Invoking Supabase function with device ID:', deviceId);
+      const { data, error: fetchError } = await supabase.functions.invoke('get-daily-question', {
         headers: {
           'x-device-id': deviceId
         }
       });
 
       if (fetchError) {
-        logger.error('Error fetching daily question:', fetchError);
-        setError('Failed to load daily question. Please try again later.');
+        logger.error('Error fetching daily question:', {
+          error: fetchError,
+          message: fetchError.message,
+          status: fetchError.status,
+          details: fetchError.details,
+          hint: fetchError.hint,
+          code: fetchError.code
+        });
+        setError(`Failed to load daily question: ${fetchError.message || 'Unknown error'}. Please try again later.`);
         setErrorObject(fetchError);
         setRawQuestionData(null);
         setUserStatus(null);
@@ -195,15 +203,22 @@ export function useTriviaQuestion(): UseTriviaQuestionReturn {
     try {
       const deviceId = await getDeviceId();
       
-      const { data, error: markError } = await supabase.functions.invoke('mark-question-completed', {
+      const { data, error: markError } = await supabase.functions.invoke('mark-completed', {
         headers: {
           'x-device-id': deviceId
         }
       });
 
       if (markError) {
-        logger.error('Error marking question as completed:', markError);
-        throw new Error('Failed to mark question as completed');
+        logger.error('Error marking question as completed:', {
+          error: markError,
+          message: markError.message,
+          status: markError.status,
+          details: markError.details,
+          hint: markError.hint,
+          code: markError.code
+        });
+        throw new Error(`Failed to mark question as completed: ${markError.message || 'Unknown error'}`);
       }
 
       if (data && data.user_status) {

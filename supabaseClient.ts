@@ -44,6 +44,7 @@ function validateSupabaseConfiguration(): { url: string; anonKey: string } {
   if (shouldUseDevelopmentSupabase()) {
     const context = Constants.executionEnvironment !== 'standalone' ? 'Expo Go' : 'development/preview build';
     console.log(`🔧 Using development Supabase instance (${context} detected)`);
+    console.log(`Dev URL: ${DEV_SUPABASE_CONFIG.url.substring(0, 30)}...`);
     return {
       url: DEV_SUPABASE_CONFIG.url,
       anonKey: DEV_SUPABASE_CONFIG.anonKey
@@ -54,6 +55,14 @@ function validateSupabaseConfiguration(): { url: string; anonKey: string } {
   console.log('🚀 Using production Supabase instance (production build)');
   const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+  
+  console.log('Production config check:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlPrefix: supabaseUrl?.substring(0, 30) + '...',
+    executionEnv: Constants.executionEnvironment,
+    buildProfile: Constants.expoConfig?.extra?.eas?.buildProfile
+  });
 
   // Check for missing configuration
   if (!supabaseUrl) {

@@ -1,5 +1,5 @@
--- Initial schema for quizr application
--- Creates all required tables and policies
+-- Clean schema for quizr application
+-- Removes unused columns and simplifies permissions
 
 -- Table to store push notification tokens
 CREATE TABLE push_tokens (
@@ -9,15 +9,13 @@ CREATE TABLE push_tokens (
 );
 
 -- Table to store one question per day (global)
+-- Removed: category, difficulty, question_type (unused columns)
 CREATE TABLE daily_questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   question_date DATE NOT NULL UNIQUE,
   question_text TEXT NOT NULL,
   correct_answer TEXT NOT NULL,
   incorrect_answers JSONB NOT NULL,
-  category TEXT,
-  difficulty TEXT,
-  question_type TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -36,20 +34,15 @@ CREATE TABLE user_question_attempts (
   UNIQUE(device_id, question_date)
 );
 
--- Grant basic permissions to anon role
+-- Grant basic permissions to anon role (for client operations only)
 GRANT USAGE ON SCHEMA public TO anon;
-
--- Grant specific permissions only on tables that need them
 GRANT SELECT, INSERT, UPDATE ON push_tokens TO anon;
-GRANT SELECT ON daily_questions TO anon;
 GRANT SELECT, INSERT, UPDATE ON user_question_attempts TO anon;
-
--- Grant usage on sequences for auto-generated IDs
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO anon;
 
 -- Enable Row Level Security
 ALTER TABLE push_tokens ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_questions ENABLE ROW LEVEL SECURITY;  -- RLS enabled but no anon policies (service role only)
 ALTER TABLE user_question_attempts ENABLE ROW LEVEL SECURITY;
 
 -- Policies for push_tokens table
@@ -62,9 +55,7 @@ CREATE POLICY "Allow anon read push tokens" ON push_tokens
 CREATE POLICY "Allow anon update push tokens" ON push_tokens
   FOR UPDATE TO anon USING (TRUE);
 
--- Policies for daily_questions table
-CREATE POLICY "Allow anon read daily questions" ON daily_questions
-  FOR SELECT TO anon USING (TRUE);
+-- NO policies for daily_questions (service role access only through Edge Functions)
 
 -- Policies for user_question_attempts table  
 CREATE POLICY "Allow anon read own attempts" ON user_question_attempts
@@ -96,3 +87,10 @@ CREATE TRIGGER update_user_attempts_updated_at
     BEFORE UPDATE ON user_question_attempts 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
+
+-- Grant necessary permissions to service_role for Edge Functions
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON daily_questions TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON user_question_attempts TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON push_tokens TO service_role;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO service_role;
